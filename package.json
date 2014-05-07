@@ -1,0 +1,23 @@
+{
+  "name": "smart-funtion",
+  "version": "0.0.1",
+  "main": "smart-funtion.js",
+  "description": "Smarter functions for javascript (browser and node)",
+
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hugorodrigues/smart-funtion.git"
+  },
+
+  "keywords": [
+    "function",
+    "validation",
+    "normalization",
+    "interpolation",
+    "smart",
+    "minimal"
+  ],
+  
+  "author": "Hugo Rodrigues",
+  "license": "MIT"
+}
