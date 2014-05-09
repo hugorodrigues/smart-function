@@ -18,6 +18,10 @@
     "minimal"
   ],
 
+  "devDependencies": {
+    "mocha": "~1.18.2"
+  },
+
   "scripts": {
     "test": "npm run test-node && npm run test-browser",
     "test-node": "mocha -R spec ./test/*"
