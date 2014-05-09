@@ -1,5 +1,6 @@
 smart-function
 ==============
+[![Build Status](https://travis-ci.org/hugorodrigues/smart-function.svg?branch=master)](https://travis-ci.org/hugorodrigues/smart-function)
 
 This simple library help you in the repetitive task of validate, normalize and interpolate the data (parameters) you receive in your functions.
 
