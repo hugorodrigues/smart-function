@@ -3,7 +3,7 @@ smart-function
 
 This simple library help you in the repetitive task of validate, normalize and interpolate the data (parameters) you receive in your functions.
 
-The goal is to ensure that your function **code will only be executed if all the required parameters pass** the expected data type.
+The goal is to ensure that your function **code will only be executed if all the required parameters pass the expected data type.**
 All data types are fully customized and can be shared across your entire application. A data type is responsible of:
 
 - **Validate:** Check if the data is valid (e.g.: email, number, etc.)
@@ -59,7 +59,7 @@ sf.call('sum', {x:1, y:1});
 ```
 
 This is just a plain-stupid example, but i guess you get the point. 
-Check the examples for really exiting usage.
+Check the examples for really exciting usage.
 
 
 
@@ -68,8 +68,8 @@ Check the examples for really exiting usage.
 - Automatically code documentation
 - Confidence about input filtering/validation
 - Security, you can do extensive unit test in your data types
-- Optional auto params normalization, validation and interpolation
-- Unified errors codes
+- Auto params normalization, validation and interpolation (Optional)
+- Unified error codes
 
 
 ## Features / Goals
