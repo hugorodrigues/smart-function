@@ -1,6 +1,6 @@
 {
   "name": "smart-function",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "smart-function.js",
   "description": "Smarter functions for javascript (browser and node)",
 

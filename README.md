@@ -243,7 +243,7 @@ Now that we have a new type we can use it accross our entire application:
 
 ```js
 
-sf.method.subtract = {
+sf.method.sayHello = {
 	params: {
 	  user: { required: true, type: 'validUser'},
 	},
