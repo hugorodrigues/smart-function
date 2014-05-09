@@ -1,12 +1,12 @@
 {
-  "name": "smart-funtion",
+  "name": "smart-function",
   "version": "0.0.1",
-  "main": "smart-funtion.js",
+  "main": "smart-function.js",
   "description": "Smarter functions for javascript (browser and node)",
 
   "repository": {
     "type": "git",
-    "url": "git://github.com/hugorodrigues/smart-funtion.git"
+    "url": "git://github.com/hugorodrigues/smart-function.git"
   },
 
   "keywords": [
@@ -17,7 +17,12 @@
     "smart",
     "minimal"
   ],
-  
-  "author": "Hugo Rodrigues",
+
+  "scripts": {
+    "test": "npm run test-node && npm run test-browser",
+    "test-node": "mocha -R spec ./test/*"
+  },
+
+  "author": "Hugo Rodrigues <hugo@StartEffect.com>",
   "license": "MIT"
 }
