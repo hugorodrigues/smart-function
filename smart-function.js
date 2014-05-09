@@ -1,5 +1,6 @@
-var smartFunction = function(config){
+module.exports = function(config){
 	
+	var config = config || {}
 	var obj = {}
 
 	// All methods will be stored here
@@ -15,31 +16,17 @@ var smartFunction = function(config){
 	// Defaults params types (validation + normalization)
 	obj.type = {
 		"_typeNotFound": function(value, options, cb) { cb(true, '_typeNotFound') },
-
-		"string": function(value, options, cb) { cb(null, value.trim())  },
-		"float": function(value, options) { return n === +n && n !== (n|0); },
-		"integer": function(value, options) { n === +n && n === (n|0); },
+		//"string": function(value, options, cb) { cb(null, value.trim())  },
+		"float": function(value, options) { return !/^\s*$/.test(value) && !isNaN(value); },
+		"integer": function(value, options) { return value === +value && value === (value|0); },
 	}
-
-
-
-
 
 	obj.setup = function(config){
-
 		// Merge user configs
 		obj.errors = obj.defaults(obj.errors, config.errors);
-		obj.validation = obj.defaults(obj.validation, config.validation);
-		obj.normalization = obj.defaults(obj.normalization, config.normalization);
 		obj.type = obj.defaults(obj.type, config.types);
-
 		obj.method = obj.defaults(obj.method, config.methods);
-
-
 	}
-
-
-
 
 	// Main input flow
 	obj.call = function(method, params, cb, context)
@@ -60,19 +47,9 @@ var smartFunction = function(config){
 		})
 	};
 
-
-
-
-
-
 	obj.callError = function(cb, errorCode, errorMsg){
 		cb(true, errorCode, errorMsg)
 	}
-
-
-
-
-
 
 	obj.paramsTypeValidation = function(params, data, cb){
 
@@ -83,7 +60,6 @@ var smartFunction = function(config){
 		var queue = [];
 		for ( param in params)
 			queue.push({param: param, type: params[param].type, value: data[param]})
-
 
 		function recursion(){
 
@@ -96,7 +72,6 @@ var smartFunction = function(config){
 					return cb(null, values);
 				else
 					return cb(true, errors);
-
 			}
 
 			// If the "type" in method param is String, add the default function param (null)
@@ -119,10 +94,7 @@ var smartFunction = function(config){
 		}
 
 		recursion()
-
 	}
-
-
 
 	obj.isEmpty = function(obj) {
 	  for(var prop in obj) {
@@ -143,9 +115,5 @@ var smartFunction = function(config){
 	}
 
 	obj.setup(config)
-
 	return obj;
-
 }
-
-
