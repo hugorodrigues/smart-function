@@ -12,8 +12,8 @@ All data types are fully customized and can be shared across your entire applica
 - **Interpolate:** Receive one value and return another (e.g.: receive a ID and return the entire table record)
 
 ## Motivation
-I'm tired of having to manually validate, normalize and (sometimes) manipulate/interpolate data before actually start coding.
-Also, when doing code reviews, the worst part (and prone to security vulnerabilities) is to check if all params are being fully validated and sanitized. 
+I'm tired of having to manually validate, normalize and (sometimes) manipulate/interpolate function parameters before actually start coding.
+Also, when doing code reviews, the worst part (and prone to security vulnerabilities) is to check if all parameters are being fully validated and sanitized. 
 
 I also need a way to centralize and unit-test all this validations, normalizations and interpolations types.
 
@@ -115,7 +115,7 @@ All those used `types` (user and email) are fully customized and can be reused a
 - `sf.call(name, params)` - Call a defined method/function
 
 - `sf.type.set(name, code)` - Define a new type rule
-- `sf.type.call(name, value, options, cb)` - Evaluate/test a type. Usefull if you need to use a type outside a smart-function
+- `sf.type.call(name, value, options, cb)` - Evaluate/test a type. Useful if you need to use a type outside a smart-function
 
 
 
@@ -311,7 +311,6 @@ sf.call('updateUserEmail', {userId: 1, newEmail: 'test@example.com'}, function(e
 
 
 
----
 ## License 
 
 (The MIT License)
