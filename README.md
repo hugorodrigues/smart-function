@@ -8,260 +8,308 @@ The goal is to ensure that your function **code will only be executed if all the
 All data types are fully customized and can be shared across your entire application. A data type is responsible of:
 
 - **Validate:** Check if the data is valid (e.g.: email, number, etc.)
-- **Normalize:** Manipulate/sanitize the data (e.g.: trim, htmlentities, etc)
+- **Normalize:** Manipulate/sanitize the data (e.g.: trim, strip html, encode, etc)
 - **Interpolate:** Receive one value and return another (e.g.: receive a ID and return the entire table record)
 
 ## Motivation
-I'm tired of having to manually validate, normalize and (sometimes) manipulate/interpolate data before actually start coding.
-Also, when doing code reviews, the worst part is to check if all params are being fully validated and sanitized. 
+I'm tired of having to manually validate, normalize and (sometimes) manipulate/interpolate function parameters before actually start coding.
+Also, when doing code reviews, the worst part (and prone to security vulnerabilities) is to check if all parameters are being fully validated and sanitized. 
+
+I also need a way to centralize and unit-test all this validations, normalizations and interpolations types.
 
 
 ## TLDR
 
-Imagine you have a function that sums two numbers but only if they are valid integer, you typically do something like:
+Imagine you have a function that is responsible of update a user e-mail address. You typically have something like this:
 
 ```js
-function sum (x, y){
+function updateUserEmail (userId, newEmail, cb){
 
-	// validate x
-	if (x == undefined || !isInteger(x))
-		return
+	// validate ID
+	if (userId == undefined || !isInteger(userId))
+		return cb('Error: Invalid Id')
 
-	// validate y
-	if (y == undefined || !isInteger(y))
-		return
+	// validate e-email
+	if (newEmail == undefined || !validEmail(newEmail))
+		return cb('Error: Invalid E-mail')
 
-	// If we are here, all the params have been successfully validated, lets finally do our stuff:
-	return x+y;
+	// Lets fetch the DB Record
+	db_userFetch(userId, function(error, data){
+
+		if (error)
+			{
+				return cb('Error: User is not on DB')
+			} else {
+
+				// OK, we FINALLY got everything we need, lets do our code
+				db_userUpdate(userId, {email: newEmail}, function(error, data){
+
+					if (error)
+						cb(error)
+					else
+						cb(null, data)
+
+				})
+			}
+	});
 }
 
-sum(1+1);
-// 2
-```
 
-
-With smart-function for each parameter, you define if they are required and the expected data type: 
-
-```js
-sf.method.sum = {
-	params: {
-	  x: { required: true, type: 'number'},
-	  y: { required: true, type: 'number'}
-	},
-	action: function(params, output, context)
-	{
-		// If we are here, all the params have been successfully validated, lets finally do our stuff:
-		return params.x + params.y;
-	}
+updateUserEmail(1, 'test@example.com', function(error, result){
+	console.log(error, result);
 })
 
-sf.call('sum', {x:1, y:1});
-// 2
 ```
 
-This is just a plain-stupid example, but i guess you get the point. 
-Check the examples for really exciting usage.
+As you can see, most of the code is just validating the needed parameters.
+With Smart-function you can skip that repetitive process:
 
+```js
 
+sf.set('updateUserEmail', {
+	userId: { required: true, type: 'user'},
+	newEmail: { required: true, type: 'email'}
+}, function(params, cb){
+	
+	// OK, we FINALLY got everything we need, lets do our code
+	userUpdate(userId, {email: newEmail}, function(error, data){
 
+		if (error)
+			cb.error(error)
+		else
+			cb.sucess(data)
 
-## Nice side effects
-- Automatically code documentation
-- Confidence about input filtering/validation
-- Security, you can do extensive unit test in your data types
-- Auto params normalization, validation and interpolation (Optional)
-- Unified error codes
+	})
+
+})
+
+sf.call('updateUserEmail', {userId: 1, newEmail: 'test@example.com'}, function(error, result){
+	console.log(error, result);
+})
+
+```
+
+As you can see, using smart-function you stop mixing validation/normalization/interpolation logic inside your function code.
+All those used `types` (user and email) are fully customized and can be reused across your entire stack.
 
 
 ## Features / Goals
-
 - Minimal implementation (Less than 130 LOC with comments)
-- Works everywhere (browser/client and server)
-- Flexible and extendable
-- No dependencies
-- Fully asynchronous
-- Unit testable
+- Works everywhere (browser and server)
+- Flexible, extendable and no dependencies
+- Fully asynchronous code
+
+## Nice side effects
+- DRY: Reusable you data types across your stack
+- Automatically parameters normalization, validation and interpolation (Optional)
+- Security: Confidence about input filtering/validation.
+- Unified error codes
+- Automatically code documentation
 
 
 
 
+## API
+
+- `sf.set(name, params, code)` Define a new method/function
+- `sf.call(name, params)` Call a defined method/function
+- `sf.type.set(name, code)` Define a new type rule
+- `sf.type.call(name, value, options, cb)` Evaluate/test a type. Useful if you need to use a type outside a smart-function
 
 
-
-# API
 
 ### INIT
 ```js
-var sf = smartFunction({
-	methods: {},				// Your methods
-	types: {},					// [Optional] Object of types to use
-	errors: {},					// [Optional] Your error codes
+var sf = require('smart-function')({
+	methods: {},		// [Optional] You can define all your methods here
+	types: {},			// [Optional] You can define all types here
+	errors: {},			// [Optional] You can define all error codes here
 });
 ```
 
 
-## METHODS
+---
+### TYPES
 
-Your can define your methods in the initialization:
-
-```js
-var sf = smartFunction({
-	methods: {
-		sum: {
-			params: {
-			  x: { required: true, type: 'number'},
-			  y: { required: true, type: 'number'}
-			},
-			action: function(params, output, context)
-			{
-				return x+y;
-			}
-		},
-		subtract: {
-			params: {
-			  x: { required: true, type: 'number'},
-			  y: { required: true, type: 'number'}
-			},
-			action: function(params, output, context)
-			{
-				return x-y;
-			}
-		}		
-	}
-});
-```
-
-Or after initialization:
-
-```js
-sf.method.sum = {
-	params: {
-	  x: { required: true, type: 'number'},
-	  y: { required: true, type: 'number'}
-	},
-	action: function(params, output, context)
-	{
-		return x+y;
-	}
-}
-
-sf.method.subtract = {
-	params: {
-	  x: { required: true, type: 'number'},
-	  y: { required: true, type: 'number'}
-	},
-	action: function(params, output, context)
-	{
-		return x-y;
-	}
-}
-```
-
-
-
-## TYPES
-
-Types are plain JS functions. Your receive the data (value param) and then you do your validation/normalization/interpolation/whatever and in the end you have two options:
-
-FAIL: When the validation fails and you want to abort you use:
-```js
-cb(true, 'Your error message or error code');
-```
-
-SUCCESS: When the validation passes you use:
-```js
-cb(null, 'The final data to pass');
-```
-
-This callback have the default js syntax 'cb(<error>, <value>)'
-
-
-
-
-Types are plain js functions that receive:
-- **Value:** The value to be evaluated
-- **Options:** Optional params to the validation (eg: in a minMax validation you can pass the max and min values)
-- **Cb:** The callback to call when you have the final decision. Since all code is asynchronous, fell free to do what you want (e.g.: wait for database, external API, etc.). 
-
-This callback have the default JS syntax 'cb(<error>, <value>)'
+Types are plain asynchronous JS functions. Your receive data and do the validation/normalization/interpolation/whatever and in the end you can abort the operation (in case the validation fails) or continue and send the final data.
 
 You can define all your types in the initialization, or using the following method:
 
+#### sf.type.set(name, function)
 
+* `name` - The name for the type
+* `function(value, options, cb)` - The function responsible for handling this data type
+	* `value` - The value to be evaluated
+	* `options` - Optional params to the validation (eg: in a minMax validation you can pass the max and min values)
+	* `cb` - The callback to call when you have the final decision: `cb.success(finalResult)` or `cb.error(errorCode, [errorMessage])`
 
+***Example***
 ```js
-sf.type.nameOfType = function(value, options, cb) {
+sf.type.set('yourTypeName', function(value, options, cb) {
 
-	// We make our validation logic here
+	// We make our validation logic here.
+	// Since all code is asynchronous, fell free to do what you want 
+	// e.g.: wait for database, external API, etc.
 
-	// If it fails, cb with the error flag
-	if (value != 'expectedValue')
-		cb(true, 'Enexpected value')
-
-	// If it is ok, we cb with out final data (here we are trimming the value)
-		cb(null, value.trim())
-},
-```
-
-Smart-function already ships with 3 default types: string, float and number, but feel free to overwrite it.
-
-
-
-
-
-
-
-
-## Example
-
-As you probably already know, the real power start when you need validation/normalization that happens in multiple parts of your application.
-
-Lets say you have a function that receives a ID of a record of the table users and you print the username. You typically have to:
-
-- Validate the integer
-- Check if is a valid record, and fetch
-
-Lets create a new type called "validUser":   
-
-```js
-sf.type.validUser = function(value, options, cb) {
-
-	// Warning: basic and insecure example, just for reference
-	var user = db("select * from user where id ="+value);
-
-	if (user == undefined)
-		{
-			// If invalid user the validation will no pass
-			cb(true, 'User not found');
-		} else {
-			// If the user is valid, we will return the user (interpolation)
-			cb(null, user);
-		}
-},
-```
-
-Now that we have a new type we can use it accross our entire application:
-
-```js
-
-sf.method.sayHello = {
-	params: {
-	  user: { required: true, type: 'validUser'},
-	},
-	action: function(params, output, context)
+	if (value == 'expectedValue')
 	{
-		// Since the 'validUser' also interpolates data, the 'params.user' now have the user DB record
-		return params.user.username; 
+		// If everything is OK we pass the final data (here we are trimming the value)
+		var finalData = value.trim()
+		cb.success(finalData)
 	}
-}
+	else
+	{
+		// If you want to stop/abort, we pass the error code and a optional error message
+		cb.error('100', 'Value is differente from "expectedValue"')
+	}
 
+})
 ```
+
+(Smart-function already ships with 2 default types: float and number, but feel free to overwrite it.)
+
+-
+
+#### sf.type.call(name, value, options, cb)
+
+* `name` - The name of the type to call
+* `value` - The value to be evaluated
+* `options` - Optional params to the type (eg: in a minMax type you can pass the max and min values)
+* `cb(error, result)` - The callback to receive the final decision and data
+
+***Example***
+```js
+sf.type.call('yourTypeName', 'myValue', function(error, result) {
+
+	if (error) {
+		console.log('Ups, this returned a error: '+error);
+	} else {
+		console.log('Great, no error, the final returned value is: '+result);
+	}
+
+})
+```
+
+(You will only need this to use your types outside smart-function scope)
+
+
+
+
+
+
+
 
 
 
 
 
 ---
+### METHODS
+
+Methods are your defined plain JS asynchronous functions. 
+
+#### sf.set(name, params, function)
+
+* `name` - The name of the method to set
+* `params` - An object of params to use, every param should have:
+	* `required` (Boolean) - Is the params required
+	* `type` - A name of the type to validate
+* `function(params, cb)` - The function containing your code
+	* `params` - A object with all the params (already validated, sanitized and interpolated by the type)
+	* `cb` - The callback to call when you have the final result: `cb.success(response)` or `cb.error(errorCode, [errorMessage])`
+
+***Example***
+```js
+sf.set('sum', {
+  x: { required: true, type: 'number'},
+  y: { required: true, type: 'number'}
+}, function(params, cb){
+	// All params are already validated, lets do our code:
+	var result = params.x + params.y;
+	cb.success(result);
+});
+```
+
+-
+#### sf.call(name, params, cb)
+
+* `name` - The name of the method to call
+* `params` - An object of params to use
+* `cb(error, result)` - The callback to receive the result
+
+***Example***
+```js
+sf.call('sum', { x: 5, y: 20 }, function(error, result){
+	console.log(result);
+});
+```
+
+
+
+
+
+
+
+
+
+
+## Full example
+
+Lets iterate from the TLDR example:
+
+```js
+
+var sf = require('smart-function')();
+
+// Lets create a new type to validate e-mail
+sf.type.set('email', function(value, options, cb) {
+
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+  if (re.test(value))
+  	cb.success(value);
+  else
+  	cb.error(100, 'Invalid e-mail');
+})
+
+// Lets create a new type to validate and interpolate a user
+sf.type.set('user', function(value, options, cb) {
+
+	var user = db_getUserId(value);
+
+  if (user)
+  	cb.success(user);
+  else
+  	cb.error(101, 'Invalid User');
+})
+
+//Lets define our method that uses our newly crated types:
+sf.set('updateUserEmail', {
+	userId: { required: true, type: 'user'},
+	newEmail: { required: true, type: 'email'}
+}, function(params, cb){
+	
+	// OK, we FINALLY got everything we need, lets do our code
+	db_userUpdate(userId, {email: newEmail}, function(error, data){
+		if (error)
+			cb.error(error)
+		else
+			cb.sucess(data)
+	})
+})
+
+// Lets use our new method
+sf.call('updateUserEmail', {userId: 1, newEmail: 'test@example.com'}, function(error, result){
+	console.log(error, result);
+})
+
+```
+
+
+
+
+
+
 ## License 
 
 (The MIT License)

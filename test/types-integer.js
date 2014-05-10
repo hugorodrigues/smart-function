@@ -4,21 +4,29 @@ var sf = require("../smart-function.js")();
 describe('type.integer', function(){
 
     var testCase = [
-        {expectedResult:false, input: 'a'},
-        {expectedResult:false, input: '1'},
-        {expectedResult:false, input: '1a'},
-        {expectedResult:false, input: 'a1'},
-        {expectedResult:false, input: 1.3},
+        { error: true, input: 'a'},
+        { error: true, input: '1'},
+        { error: true, input: '1a'},
+        { error: true, input: 'a1'},
+        { error: true, input: 1.3},
 
-        {expectedResult:true, input: 0},
-        {expectedResult:true, input: 1},
-        {expectedResult:true, input: -1},
-        {expectedResult:true, input: 1000}
+        { error: null, input: 0},
+        { error: null, input: 1},
+        { error: null, input: -1},
+        { error: null, input: 1000}
     ]
 
     for (var test in testCase)
-        it('The input "'+testCase[test].input+'" should return "'+testCase[test].expectedResult+'"', function(){
-            assert.equal(this.expectedResult, sf.type.integer(this.input));
+    {
+        it('The input "'+testCase[test].input+'" should return "'+testCase[test].error+'"', function(){
+
+            var that = this;
+
+            sf.type.integer(this.input, null, function(error, value){
+                assert.equal(that.error, error);
+            })
+
         }.bind(testCase[test]))
+    }
 
 })

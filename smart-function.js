@@ -16,9 +16,18 @@ module.exports = function(config){
 	// Defaults params types (validation + normalization)
 	obj.type = {
 		"_typeNotFound": function(value, options, cb) { cb(true, '_typeNotFound') },
-		//"string": function(value, options, cb) { cb(null, value.trim())  },
-		"float": function(value, options) { return !/^\s*$/.test(value) && !isNaN(value); },
-		"integer": function(value, options) { return value === +value && value === (value|0); },
+		"float": function(value, options, cb) {
+			if (!/^\s*$/.test(value) && !isNaN(value))
+				cb(null, value);
+			else
+				cb(true, 'Invalid float');
+		},
+		"integer": function(value, options, cb) { 
+			if (value === +value && value === (value|0))
+				cb(null, value);
+			else
+				cb(true, 'Invalid integer');
+		},
 	}
 
 	obj.setup = function(config){
@@ -39,10 +48,12 @@ module.exports = function(config){
 		obj.paramsTypeValidation(obj.method[method].params, params, function(error, data){
 		
 			// Execute Requested method and expose callbacks to the action
-			obj.method[method].action(data, {
-				win:function(output) { cb(null, output) }, 
-				fail:function (code, msg) { cb(true, code, msg) }
-			}, context);
+			//obj.method[method].action(data, {
+			//	success:function(output) { cb(null, output) }, 
+			//	error:function (code, msg) { cb(true, code, msg) }
+			//}, context);
+
+			obj.method[method].action(data, cb, context);
 
 		})
 	};
@@ -84,8 +95,8 @@ module.exports = function(config){
 
 			obj.type[work.type[0]](work.value, work.type[1], function (error, data){
 
-				if (error == true)
-					errors[work.param] = data
+				if (error)
+					errors[work.param] = error
 				else
 					values[work.param] = data
 
