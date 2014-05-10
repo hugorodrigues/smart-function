@@ -1,10 +1,6 @@
 module.exports = function(config){
-	
 	var config = config || {}
 	var obj = {}
-
-	// All methods will be stored here
-	obj.method = {}
 
 	// Default errors
 	obj.errors = {
@@ -13,57 +9,77 @@ module.exports = function(config){
 		'-326021': { msg: 'Internal error' }
 	}
 
+	// All methods will be stored here
+	obj.methods = {}
+
 	// Defaults params types (validation + normalization)
-	obj.type = {
+	obj.types = {
 		"_typeNotFound": function(value, options, cb) { cb(true, '_typeNotFound') },
-		"float": function(value, options, cb) {
-			if (!/^\s*$/.test(value) && !isNaN(value))
-				cb(null, value);
-			else
-				cb(true, 'Invalid float');
-		},
-		"integer": function(value, options, cb) { 
-			if (value === +value && value === (value|0))
-				cb(null, value);
-			else
-				cb(true, 'Invalid integer');
-		},
+		"float": function(value, options, cb) { if (!/^\s*$/.test(value) && !isNaN(value)) cb.success(value); else cb.error('0', 'Invalid float'); },
+		"integer": function(value, options, cb) { if (value === +value && value === (value|0)) cb.success(value); else cb.error('0', 'Invalid integer'); },
 	}
 
-	obj.setup = function(config){
-		// Merge user configs
-		obj.errors = obj.defaults(obj.errors, config.errors);
-		obj.type = obj.defaults(obj.type, config.types);
-		obj.method = obj.defaults(obj.method, config.methods);
+	// METHOD: Define a new
+	obj.set = function(name, params, code)
+	{
+		obj.methods[name] = {
+			params: params,
+			action: code
+		}
 	}
 
-	// Main input flow
+	// METHOD: Call a defined method/function
 	obj.call = function(method, params, cb, context)
 	{
 		// validate requested method
-		if (obj.method[method] == undefined)
+		if (obj.methods[method] == undefined)
 			return obj.callError(cb, -32601)
 
-		// Validate requested params
-		obj.paramsTypeValidation(obj.method[method].params, params, function(error, data){
-		
-			// Execute Requested method and expose callbacks to the action
-			//obj.method[method].action(data, {
-			//	success:function(output) { cb(null, output) }, 
-			//	error:function (code, msg) { cb(true, code, msg) }
-			//}, context);
+		// validate params object
+		if (typeof params != 'object' || params == null)
+			return obj.callError(cb, -32602)
 
-			obj.method[method].action(data, cb, context);
+		// Validate requested params
+		obj.paramsTypeValidation(obj.methods[method].params, params, function(error, data){
+
+			if (error)
+				return obj.callError(cb, -32602, null, data )
+
+			// Execute Requested method and expose callbacks to the action
+			obj.methods[method].action(data, {
+				success:function(response) { cb(null, response) }, 
+				error:function (errorCode, errorMsg) { obj.callError(cb, errorCode, errorMsg) }
+			}, context);
 
 		})
-	};
+	}
 
-	obj.callError = function(cb, errorCode, errorMsg){
-		cb(true, errorCode, errorMsg)
+	obj.callError = function(cb, errorCode, errorMsg, errorData){
+		var error = {code: errorCode, message: errorMsg}
+
+		if (obj.errors[errorCode] && error.message == null)
+			error.message = obj.errors[errorCode].message;
+
+		if (errorData)
+			error.data = errorData;
+
+		cb(error)
+	}
+
+	// TYPES: Set and call
+	obj.type = {
+		set: function(name, code){
+			obj.types[name] = code;
+		},
+		call: function(name, value, options, cb){
+			obj.types[name](value, options, {
+				success: function(data){ cb(null, data) },
+				error: function(errorCode, errorMessage, errorData){ obj.callError(cb, errorCode, errorMessage, errorData) },
+			})
+		}
 	}
 
 	obj.paramsTypeValidation = function(params, data, cb){
-
 		var errors = {}
 		var values = {}
 
@@ -79,9 +95,9 @@ module.exports = function(config){
 			// If no more work, set complete
 			if (work == undefined)
 			{
-				if (obj.isEmpty(errors))
-					return cb(null, values);
-				else
+				if (obj.isEmpty(errors)) 
+					return cb(null, values); 
+				else 
 					return cb(true, errors);
 			}
 
@@ -90,41 +106,41 @@ module.exports = function(config){
 			  work.type = [work.type, null]
 
 			// Is a valid validation type function ? 
-			if (typeof obj.type[work.type[0]] != "function")
+			if (typeof obj.types[work.type[0]] != "function")
 				work.type[0] = '_typeNotFound';
 
-			obj.type[work.type[0]](work.value, work.type[1], function (error, data){
+			// Call type validation
+			obj.type.call(work.type[0], work.value, work.type[1], function (error, data){
 
-				if (error)
-					errors[work.param] = error
-				else
+				if (error) 
+					errors[work.param] = error;//{code:error, errorMessage: data}
+				else 
 					values[work.param] = data
 
 				recursion();
-			})			
+			})
+
 		}
 
 		recursion()
 	}
 
+	// Helper - Empty object?
 	obj.isEmpty = function(obj) {
-	  for(var prop in obj) {
-	    if(obj.hasOwnProperty(prop))
-	      return false;
-	  }
-
+	  for(var prop in obj) if(obj.hasOwnProperty(prop)) return false;
 	  return true;
 	}
 
+	// Helper - Merge objects
 	obj.defaults = function(defaults, config){
-
-		if (config)
-			for (key in config)
-				defaults[key] = config[key];
-			
+		if (config) for (key in config) defaults[key] = config[key];
 		return defaults
 	}
 
-	obj.setup(config)
+	// Merge user configs
+	obj.errors = obj.defaults(obj.errors, config.errors);
+	obj.types = obj.defaults(obj.types, config.types);
+	obj.methods = obj.defaults(obj.methods, config.methods);
+
 	return obj;
 }

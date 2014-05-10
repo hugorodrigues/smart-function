@@ -1,29 +1,47 @@
 var assert = require("assert")
 var sf = require("../smart-function.js")();
 
-describe('type.integer', function(){
+describe('Included Types: integer', function(){
 
+    // Invalid test case
     var testCase = [
-        { error: true, input: 'a'},
-        { error: true, input: '1'},
-        { error: true, input: '1a'},
-        { error: true, input: 'a1'},
-        { error: true, input: 1.3},
-
-        { error: null, input: 0},
-        { error: null, input: 1},
-        { error: null, input: -1},
-        { error: null, input: 1000}
+        { input: 'a'},
+        { input: '1'},
+        { input: '1a'},
+        { input: 'a1'},
+        { input: 1.3},
     ]
 
     for (var test in testCase)
     {
-        it('The input "'+testCase[test].input+'" should return "'+testCase[test].error+'"', function(){
+        it('The input "'+testCase[test].input+'" should be Invalid', function(){
 
             var that = this;
 
-            sf.type.integer(this.input, null, function(error, value){
-                assert.equal(that.error, error);
+            sf.type.call('integer', this.input, null, function(error, value){
+                assert.notEqual(null, error);
+            })
+
+        }.bind(testCase[test]))
+    }
+
+
+    // Valid test case
+    var testCase = [
+        { input: 0 },
+        { input: 1 },
+        { input: -1 },
+        { input: 1000}
+    ]
+
+    for (var test in testCase)
+    {
+        it('The input "'+testCase[test].input+'" should be Invalid', function(){
+
+            var that = this;
+
+            sf.type.call('integer', this.input, null, function(error, value){
+                assert.equal(null, error);
             })
 
         }.bind(testCase[test]))

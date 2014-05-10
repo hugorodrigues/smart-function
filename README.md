@@ -94,19 +94,20 @@ All those used `types` (user and email) are fully customized and can be reused a
 
 
 ## Features / Goals
-- Minimal implementation (Less than 130 LOC with comments)
+- Minimal implementation (Less than 150 LOC with comments)
 - Works everywhere (browser and server)
-- Flexible, extendable and no dependencies
+- Flexible, extendable and without dependencies
 - Fully asynchronous code
+- Unit tested
+
 
 ## Nice side effects
-- DRY: Reusable you data types across your stack
+- DRY: Reusable data types across your stack
 - Automatically parameters normalization, validation and interpolation (Optional)
 - Security: Confidence about input filtering/validation.
 - Unified error codes
 - Automatically code documentation
-
-
+- Works great as 'controller' in mvc or RPC/REST (check [rpc.js](https://github.com/hugorodrigues/rpc.js) for examples)
 
 
 ## API
@@ -123,7 +124,6 @@ All those used `types` (user and email) are fully customized and can be reused a
 var sf = require('smart-function')({
 	methods: {},		// [Optional] You can define all your methods here
 	types: {},			// [Optional] You can define all types here
-	errors: {},			// [Optional] You can define all error codes here
 });
 ```
 
@@ -221,8 +221,8 @@ Methods are your defined plain JS asynchronous functions.
 ***Example***
 ```js
 sf.set('sum', {
-  x: { required: true, type: 'number'},
-  y: { required: true, type: 'number'}
+  x: { required: true, type: 'integer'},
+  y: { required: true, type: 'integer'}
 }, function(params, cb){
 	// All params are already validated, lets do our code:
 	var result = params.x + params.y;
