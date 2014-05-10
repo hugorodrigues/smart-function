@@ -303,7 +303,7 @@ sf.call('updateUserEmail', {user: 1, newEmail: 'test@example.com'}, function(err
 })
 ```
 
-This code workd but it misses the imaginary db functions. If you intend to run the code for tests you can add the following dummy alternative functions:
+This code works but it misses the imaginary db functions. If you intend to run the code for tests you can add the following dummy alternative functions:
 
 ```js
 function db_getUserId(id){
