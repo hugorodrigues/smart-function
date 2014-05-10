@@ -258,7 +258,6 @@ sf.call('sum', { x: 5, y: 20 }, function(error, result){
 Lets iterate from the TLDR example:
 
 ```js
-
 var sf = require('smart-function')();
 
 // Lets create a new type to validate e-mail
@@ -267,45 +266,58 @@ sf.type.set('email', function(value, options, cb) {
   var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
   if (re.test(value))
-  	cb.success(value);
+    cb.success(value);
   else
-  	cb.error(100, 'Invalid e-mail');
+    cb.error(100, 'Invalid e-mail');
 })
 
 // Lets create a new type to validate and interpolate a user
 sf.type.set('user', function(value, options, cb) {
 
-	var user = db_getUserId(value);
+    var user = db_getUserId(value);
 
   if (user)
-  	cb.success(user);
+    cb.success(user);
   else
-  	cb.error(101, 'Invalid User');
+    cb.error(101, 'Invalid User');
 })
 
 //Lets define our method that uses our newly crated types:
 sf.set('updateUserEmail', {
-	userId: { required: true, type: 'user'},
-	newEmail: { required: true, type: 'email'}
+    user: { required: true, type: 'user'},
+    newEmail: { required: true, type: 'email'}
 }, function(params, cb){
-	
-	// OK, we FINALLY got everything we need, lets do our code
-	db_userUpdate(userId, {email: newEmail}, function(error, data){
-		if (error)
-			cb.error(error)
-		else
-			cb.sucess(data)
-	})
+
+    // OK, we FINALLY got everything we need, lets do our code
+    db_userUpdate(params.user.id, {email: params.newEmail}, function(error, data){
+        if (error)
+            cb.error(error)
+        else
+            cb.success('E-mail updated for user '+params.user.name)
+    })
 })
 
 // Lets use our new method
-sf.call('updateUserEmail', {userId: 1, newEmail: 'test@example.com'}, function(error, result){
-	console.log(error, result);
+sf.call('updateUserEmail', {user: 1, newEmail: 'test@example.com'}, function(error, result){
+    console.log(error, result);
 })
-
 ```
 
+This code workd but it misses the imaginary db functions. If you intend to run the code for tests you can add the following dummy alternative functions:
 
+```js
+function db_getUserId(id){
+	return {
+		id: id,
+		name: 'johndoe',
+		email: 'john@doe.com'
+	}
+}
+
+function db_userUpdate(id, email, cb){
+	cb(null, 'yay!')
+}
+```
 
 
 
